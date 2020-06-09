@@ -1,10 +1,10 @@
 <script>
+	import meetups from './meetups-store.js';
 	import { createEventDispatcher } from 'svelte';
 	import TextInput from '../UI/TextInput.svelte';
 	import Button from '../UI/Button.svelte';
 	import Modal from '../UI/Modal.svelte';
-
-	const dispatch = createEventDispatcher();
+	import { isEmpty, isValidEmail } from '../helpers/validation.js';
 
 	let title = '';
 	let subtitle = '';
@@ -13,16 +13,35 @@
 	let description = '';
 	let imageUrl = '';
 	let isFav;
+	let formIsValid = false;
+
+	const dispatch = createEventDispatcher();
+
+	$: titleValid = !isEmpty(title);
+	$: subTitleValid = !isEmpty(subtitle);
+	$: addressValid = !isEmpty(address);
+	$: descriptionValid = !isEmpty(description);
+	$: imageURLValid = !isEmpty(imageUrl);
+	$: emailValid = isValidEmail(email);
+	$: formIsValid =
+		titleValid &&
+		subTitleValid &&
+		addressValid &&
+		descriptionValid &&
+		imageURLValid &&
+		emailValid;
 
 	function submitForm() {
-		dispatch('save-meetup', {
+		const meetupData = {
 			title: title,
 			subtitle: subtitle,
-			address: address,
-			email: email,
 			description: description,
 			imageUrl: imageUrl,
-		});
+			contactEmail: email,
+			address: address,
+		};
+		meetups.addMeetup(meetupData);
+		dispatch('save-meetup');
 	}
 
 	function cancel() {
@@ -41,38 +60,52 @@
 		<TextInput
 			id="title"
 			label="Title"
+			valid={titleValid}
+			validityMessage="Title for your meetup, can't be blank!"
 			value={title}
 			on:input={event => (title = event.target.value)} />
 		<TextInput
 			id="subtitle"
 			label="Subtitle"
+			valid={subTitleValid}
+			validityMessage="Maybe a little more deets of the meets?"
 			value={subtitle}
 			on:input={event => (subtitle = event.target.value)} />
 		<TextInput
 			id="address"
 			label="Address"
+			valid={addressValid}
+			validityMessage="People neeed to know where to go!"
 			value={address}
 			on:input={event => (address = event.target.value)} />
 		<TextInput
 			id="imageUrl"
 			label="ImageUrl"
+			valid={imageURLValid}
+			validityMessage="Images speak 1000 words."
 			value={imageUrl}
 			on:input={event => (imageUrl = event.target.value)} />
 		<TextInput
 			id="email"
 			label="E-Mail"
+			valid={emailValid}
+			validityMessage="Who they gonna call?"
 			value={email}
 			type="email"
 			on:input={event => (email = event.target.value)} />
 		<TextInput
 			id="description"
 			label="Description"
+			valid={descriptionValid}
+			validityMessage="Why would anyone want to come?"
 			value={description}
 			controlType="textarea"
 			on:input={event => (description = event.target.value)} />
 	</form>
 	<div slot="footer">
-		<Button type="button" on:click={submitForm}>Save</Button>
+		<Button type="button" on:click={submitForm} disabled={!formIsValid}>
+			Save
+		</Button>
 		<Button type="button" mode="outline" on:click={cancel}>Cancel</Button>
 	</div>
 </Modal>
