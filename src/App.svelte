@@ -5,15 +5,37 @@
 	import TextInput from './UI/TextInput.svelte';
 	import Button from './UI/Button.svelte';
 	import EditMeetup from './Meetups/EditMeetup.svelte';
+	import MeetupDetail from './Meetups/MeetupDetail.svelte';
 
 	let editMode = null;
+	let editedId;
+	let page = 'overview';
+	let pageData = {};
 
 	function cancelEdit() {
 		editMode = null;
+		editedId = null;
 	}
 
-	function addMeetup() {
+	function savedMeetup() {
 		editMode = null;
+		editedId = null;
+	}
+
+	function showDetails(event) {
+		page = 'details';
+		pageData.id = event.detail;
+		console.log(pageData);
+	}
+
+	function closeDetails() {
+		page = 'overview';
+		pageData = {};
+	}
+
+	function startEdit(event) {
+		editMode = 'edit';
+		editedId = event.detail;
 	}
 </script>
 
@@ -21,19 +43,24 @@
 	main {
 		margin-top: 5rem;
 	}
-	.meetup-controls {
-		margin: 1rem;
-	}
 </style>
 
 <Header />
 
-<main>
-	<div class="meetup-controls">
-		<Button on:click={() => (editMode = 'add')}>New Meetup</Button>
-	</div>
-	{#if editMode === 'add'}
-		<EditMeetup on:save-meetup={addMeetup} on:cancel={cancelEdit} />
-	{/if}
-	<MeetupGrid meetups={$meetups} />
-</main>
+{#if page === 'overview'}
+	<main>
+		{#if editMode === 'edit'}
+			<EditMeetup
+				id={editedId}
+				on:save-meetup={savedMeetup}
+				on:cancel={cancelEdit} />
+		{/if}
+		<MeetupGrid
+			meetups={$meetups}
+			on:show-details={showDetails}
+			on:edit={startEdit}
+			on:add={() => (editMode = 'edit')} />
+	</main>
+{:else}
+	<MeetupDetail id={pageData.id} on:close={closeDetails} />
+{/if}

@@ -28,14 +28,29 @@ const meetups = writable([
 
 const customMeetupsStore = {
 	subscribe: meetups.subscribe,
-	addMeetup: (meetupDate) => {
+	addMeetup: (meetupData) => {
 		const newMeetup = {
-			...meetupDate,
+			...meetupData,
 			id: Math.random().toString(),
 			isFavorite: false,
 		};
 		meetups.update((items) => {
 			return [newMeetup, ...items];
+		});
+	},
+	updateMeetup: (id, meetupData) => {
+		meetups.update((items) => {
+			const meetupIndex = items.findIndex((i) => i.id === id);
+			// collapses (union) the objects using the spread operator.
+			const updatedMeetup = { ...items[meetupIndex], ...meetupData };
+			const updatedMeetups = [...items];
+			updatedMeetups[meetupIndex] = updatedMeetup;
+			return updatedMeetups;
+		});
+	},
+	removeMeetup: (id) => {
+		meetups.update((items) => {
+			return items.filter((i) => i.id !== id);
 		});
 	},
 	toggleFavorite: (id) => {
